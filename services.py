@@ -18,3 +18,12 @@ def get_quizzes():
         return response(res.json())
     except RequestException as error:
         return response(None, error_message=error)
+
+
+def get_quiz_questions(quiz_id: str):
+    try:
+        res = requests.get(f'{API_URL}/quizzes/{quiz_id}/questions')
+        res.raise_for_status()
+        return response(res.json())
+    except RequestException as error:
+        return response(None, error_message=error)
