@@ -1,0 +1,1 @@
+SELECTING_QUIZ = 'selecting_quiz'
