@@ -47,7 +47,8 @@ async def select_quiz(update: Update, context: CallbackContext):
     keyboard = [[choice['text']] for choice in choices]
 
     await update.callback_query.edit_message_text(text='Quiz started')
-    await update.effective_message.reply_text(text=f'Q1: {first_question}', reply_markup=ReplyKeyboardMarkup(keyboard, input_field_placeholder='Select your answer from the choices below'))
+    await update.effective_message.reply_text(text=f'Q1: {first_question}', 
+                                              reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
     return TAKING_QUIZ
 
 
@@ -66,7 +67,6 @@ async def answer_question(update: Update, context: CallbackContext):
 
     # Finished last question
     if not quiz.advance_to_next_question():
-        # TODO: Clear the reply keyboard!
         # Show quiz score with 'back to menu' button
         keyboard = [[InlineKeyboardButton(
             '<< Back to menu', callback_data=FINISHED_QUIZ)]]
@@ -78,7 +78,7 @@ async def answer_question(update: Update, context: CallbackContext):
 
     keyboard = [[choice['text']] for choice in choices]
 
-    await update.message.reply_text(text=f"Q{quiz.current_question_index + 1}: {question['text']}", reply_markup=ReplyKeyboardMarkup(keyboard, input_field_placeholder='Select your answer from the choices below'))
+    await update.message.reply_text(text=f"Q{quiz.current_question_index + 1}: {question['text']}", reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
     return
 
 

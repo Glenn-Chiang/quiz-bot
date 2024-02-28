@@ -12,7 +12,7 @@ start_menu_keyboard = InlineKeyboardMarkup([
 
 
 async def start(update: Update, context: CallbackContext):
-    intro_message = "Hi, I am Quiz Bot."
+    intro_message = "Hi, I am Quiz Bot, your quizzical computerized companion."
     message = 'What would you like to do?'
 
     # When this callback is called by entering the /start command,
