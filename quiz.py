@@ -1,3 +1,4 @@
+from typing import List
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler
 from menu_codes import SELECT_QUIZ
@@ -35,13 +36,27 @@ async def select_quiz(update: Update, context: CallbackContext):
     if error:
         await update.message.reply_text(f'Error fetching quiz questions: {error}')
         return
-    
-    context.chat_data['questions'] = quiz_questions
+
+    context.chat_data['quiz_id'] = Quiz(
+        quiz_id=quiz_id, questions=quiz_questions)
 
 
-# class Quiz():
-#     def __init__(self) -> None:
-        
+class Quiz():
+    def __init__(self, quiz_id: str, questions: List[dict]) -> None:
+        self.quiz_id = quiz_id
+        self.questions = questions
+        # Which question the user is currently at. This refers to the order of appearance of the question, not the question_id
+        self.current_question_index = 0
+
+    def current_question(self) -> dict:
+        return self.questions[self.current_question_index]
+
+    def current_question_answer(self) -> dict:
+        choices = self.current_question()['choices']
+        return next([choice for choice in choices if choice['correct']], None)
+
+    def advance_to_next_question(self) -> None:
+        self.current_question_index += 1
 
 
 quiz_handler = ConversationHandler(
