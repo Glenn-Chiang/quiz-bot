@@ -1,9 +1,9 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, MessageHandler, CallbackQueryHandler
 from quiz import quiz_handler
-from menu_codes import SELECT_QUIZ
 
 SELECTING_ACTION = 0
+SELECT_QUIZ = 1
 
 
 async def start(update: Update, context: CallbackContext):
