@@ -1,1 +1,1 @@
-SELECTING_QUIZ = 'selecting_quiz'
+SELECT_QUIZ = 'selecting_quiz'

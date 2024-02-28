@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, MessageHandler, CallbackQueryHandler
 from quiz import quiz_handler
-from menu_codes import SELECTING_QUIZ
+from menu_codes import SELECT_QUIZ
 
 SELECTING_ACTION = 0
 
@@ -9,11 +9,11 @@ SELECTING_ACTION = 0
 async def start(update: Update, context: CallbackContext):
     message = 'Hi, I am Quiz-Bot. What would you like to do?'
     keyboard = [
-        [InlineKeyboardButton('Select a quiz', callback_data=SELECTING_QUIZ)],
+        [InlineKeyboardButton('Select a quiz', callback_data=SELECT_QUIZ)],
         [InlineKeyboardButton('Create a quiz', callback_data=2)],
         [InlineKeyboardButton('View stats', callback_data=3)]
     ]
-    await update.message.reply_text(text=message, reply_markup=InlineKeyboardMarkup(keyboard=keyboard))
+    await update.message.reply_text(text=message, reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_ACTION
 
 

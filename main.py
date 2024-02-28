@@ -2,14 +2,14 @@ import os
 from telegram.ext import Application
 from dotenv import load_dotenv
 load_dotenv()
-from quiz import quiz_handler
+from start_menu import start_menu_handler
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 
 def main():
     app = Application.builder().token(token=BOT_TOKEN).build()
-
+    app.add_handler(start_menu_handler)
     app.run_polling()
 
 
