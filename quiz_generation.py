@@ -10,7 +10,7 @@ from services import generate_quiz
 async def start(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     keyboard = [[InlineKeyboardButton('Cancel', callback_data=END)]]
-    await update.callback_query.edit_message_text('Enter a subject for the quiz', reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.effective_message.reply_text('Enter a subject for the quiz', reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_SUBJECT
 
 
@@ -40,12 +40,16 @@ async def select_question_count(update: Update, context: CallbackContext):
     subject: str = context.chat_data['quiz_subject']
 
     await update.callback_query.edit_message_text('Generating quiz. This may take a while...')
-    quiz, error = generate_quiz(subject=subject, question_count=question_count)
 
-    if error:
-        await update.effective_message.reply_text(f'Error generating quiz')
-        # TODO: Handle error
-        return
+    while True:
+        quiz, error = generate_quiz(
+            subject=subject, question_count=question_count)
+        # Retry generating quiz until successful, or until user cancels
+        if error:
+            await update.effective_message.reply_text(f'Error generating quiz. Retrying...',
+                                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=END)]]))
+        else:
+            break
 
     await update.callback_query.edit_message_text(f"Quiz generated! #{quiz['id']}: {quiz['subject']}")
 
