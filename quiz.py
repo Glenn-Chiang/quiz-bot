@@ -3,8 +3,8 @@ from typing import List
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 from services import get_quizzes, get_quiz_questions
-from start_menu import start
 from conversation_states import SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ, END, START, SHOW_QUIZZES, RESTART_QUIZ
+from start_menu import return_to_menu_handler
 
 # state = START_STATE
 # When the user clicks the 'Select a Quiz' button,
@@ -75,7 +75,7 @@ async def answer_question(update: Update, context: CallbackContext):
             [InlineKeyboardButton(
                 'Retry this quiz', callback_data=RESTART_QUIZ)],
             [InlineKeyboardButton(
-                'Select a quiz', callback_data=SHOW_QUIZZES)],
+                'Take another quiz', callback_data=SHOW_QUIZZES)],
             [InlineKeyboardButton('Back to menu', callback_data=END)],
         ]
         await update.message.reply_text(text=f'You scored: {quiz.score}/{len(quiz.questions)}')
@@ -106,14 +106,6 @@ async def restart_quiz(update: Update, context: CallbackContext):
     await update.effective_message.reply_text(text=f'Q1: {first_question}',
                                               reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
     return TAKING_QUIZ
-
-
-# fallback
-async def return_to_menu(update: Update, context: CallbackContext):
-    if update.callback_query:
-        await update.callback_query.answer()
-    await start(update, context)
-    return END
 
 
 def get_quiz(context: CallbackContext):
@@ -163,8 +155,7 @@ quiz_handler = ConversationHandler(
         FINISHED_QUIZ: [show_quizzes_handler, CallbackQueryHandler(
             callback=restart_quiz, pattern=f'^{RESTART_QUIZ}$')]
     },
-    fallbacks=[CallbackQueryHandler(
-        callback=return_to_menu, pattern=f'^{END}$')],
+    fallbacks=[return_to_menu_handler],
     map_to_parent={
         END: START
     }

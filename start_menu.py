@@ -1,27 +1,35 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackContext, CommandHandler, ConversationHandler
-from conversation_states import START, SHOW_QUIZZES
-
-
-start_menu_keyboard = InlineKeyboardMarkup([
-    [InlineKeyboardButton('Select a quiz', callback_data=SHOW_QUIZZES)],
-    [InlineKeyboardButton('Create a quiz', callback_data=2)],
-])
+from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler
+from conversation_states import START, TAKE_QUIZ, CREATE_QUIZ, END
 
 
 async def start(update: Update, context: CallbackContext):
     intro_message = "Hi, I am Quiz Bot, your quizzical computerized companion."
     message = 'What would you like to do?'
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton('Take a quiz', callback_data=TAKE_QUIZ)],
+        [InlineKeyboardButton('Create a quiz', callback_data=CREATE_QUIZ)],
+    ])
 
     # When this callback is called by entering the /start command,
     # we send the intro message
     if update.message:
         await update.message.reply_text(text=intro_message)
-        await update.message.reply_text(text=message, reply_markup=start_menu_keyboard)
+        await update.message.reply_text(text=message, reply_markup=keyboard)
     # When this callback is called by a menu button, we don't send the intro message
     else:
-        await update.callback_query.edit_message_text(text=message, reply_markup=start_menu_keyboard)
+        await update.callback_query.edit_message_text(text=message, reply_markup=keyboard)
     return START
+
+
+async def return_to_menu(update: Update, context: CallbackContext):
+    if update.callback_query:
+        await update.callback_query.answer()
+    await start(update, context)
+    return END
+
+return_to_menu_handler = CallbackQueryHandler(
+    callback=return_to_menu, pattern=f'^{END}$')
 
 from quiz import quiz_handler
 
