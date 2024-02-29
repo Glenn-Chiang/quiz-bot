@@ -1,15 +1,16 @@
+import random
 from typing import List
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 from services import get_quizzes, get_quiz_questions
-from start_menu import SELECT_QUIZ, START_STATE, start
+from start_menu import start
+from conversation_states import SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ, END, START, SHOW_QUIZZES, RESTART_QUIZ
 
-
-SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ = range(3)
-
-
+# state = START_STATE
 # When the user clicks the 'Select a Quiz' button,
 # show the list of quizzes for the user to select from
+
+
 async def show_quizzes(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text('Fetching quizzes...')
@@ -20,7 +21,7 @@ async def show_quizzes(update: Update, context: CallbackContext):
 
     shown_quizzes = quizzes[:10]
     keyboard = [[InlineKeyboardButton(f"#{quiz_data['id']}: {quiz_data['subject'].title()}", callback_data=str(quiz_data['id']))]
-                for quiz_data in shown_quizzes]
+                for quiz_data in shown_quizzes] + [[InlineKeyboardButton('Back to menu', callback_data=END)]]
 
     await update.callback_query.edit_message_text(text='Select a quiz from below', reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_QUIZ
@@ -47,7 +48,7 @@ async def select_quiz(update: Update, context: CallbackContext):
     keyboard = [[choice['text']] for choice in choices]
 
     await update.callback_query.edit_message_text(text='Quiz started')
-    await update.effective_message.reply_text(text=f'Q1: {first_question}', 
+    await update.effective_message.reply_text(text=f'Q1: {first_question}',
                                               reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
     return TAKING_QUIZ
 
@@ -65,17 +66,24 @@ async def answer_question(update: Update, context: CallbackContext):
     else:
         await update.message.reply_text(text=f'Incorrect. Correct answer: {correct_choice}')
 
-    # Finished last question
+    # When the user finishes the quiz, give them options to:
+        # Retry the same quiz
+        # Select another quiz
+        # Return to start menu
     if not quiz.advance_to_next_question():
-        # Show quiz score with 'back to menu' button
-        keyboard = [[InlineKeyboardButton(
-            '<< Back to menu', callback_data=FINISHED_QUIZ)]]
-        await update.message.reply_text(text=f'You scored: {quiz.score}/{len(quiz.questions)}', reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard = [
+            [InlineKeyboardButton(
+                'Retry this quiz', callback_data=RESTART_QUIZ)],
+            [InlineKeyboardButton(
+                'Select a quiz', callback_data=SHOW_QUIZZES)],
+            [InlineKeyboardButton('Back to menu', callback_data=END)],
+        ]
+        await update.message.reply_text(text=f'You scored: {quiz.score}/{len(quiz.questions)}')
+        await update.message.reply_text(text='What would you like to do?', reply_markup=InlineKeyboardMarkup(keyboard))
         return FINISHED_QUIZ
 
     question = quiz.current_question()
     choices = question['choices']
-
     keyboard = [[choice['text']] for choice in choices]
 
     await update.message.reply_text(text=f"Q{quiz.current_question_index + 1}: {question['text']}", reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
@@ -83,10 +91,29 @@ async def answer_question(update: Update, context: CallbackContext):
 
 
 # state = FINISHED_QUIZ
-async def return_to_menu(update: Update, context: CallbackContext):
+# Restart the same quiz
+async def restart_quiz(update: Update, context: CallbackContext):
     await update.callback_query.answer()
+    quiz = get_quiz(context)
+    quiz.reset()
+
+    first_question = quiz.questions[0]['text']
+    choices = quiz.questions[0]['choices']
+
+    keyboard = [[choice['text']] for choice in choices]
+
+    await update.callback_query.edit_message_text(text='Quiz started')
+    await update.effective_message.reply_text(text=f'Q1: {first_question}',
+                                              reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, input_field_placeholder='Select your answer from the choices below'))
+    return TAKING_QUIZ
+
+
+# fallback
+async def return_to_menu(update: Update, context: CallbackContext):
+    if update.callback_query:
+        await update.callback_query.answer()
     await start(update, context)
-    return ConversationHandler.END
+    return END
 
 
 def get_quiz(context: CallbackContext):
@@ -119,18 +146,26 @@ class Quiz():
         self.current_question_index += 1
         return True
 
+    def reset(self) -> None:
+        self.current_question_index = 0
+        self.score = 0
+        random.shuffle(self.questions)
+
+
+show_quizzes_handler = CallbackQueryHandler(
+    callback=show_quizzes, pattern=f'^{SHOW_QUIZZES}$')
 
 quiz_handler = ConversationHandler(
-    entry_points=[CallbackQueryHandler(
-        callback=show_quizzes, pattern=f'^{SELECT_QUIZ}$')],
+    entry_points=[show_quizzes_handler],
     states={
-        SELECTING_QUIZ: [CallbackQueryHandler(callback=select_quiz)],
-        TAKING_QUIZ: [MessageHandler(
-            filters=filters.TEXT, callback=answer_question)],
-        FINISHED_QUIZ: [CallbackQueryHandler(callback=return_to_menu)]
+        SELECTING_QUIZ: [CallbackQueryHandler(callback=select_quiz, pattern=f'^(?!{END}).*$')],
+        TAKING_QUIZ: [MessageHandler(filters=filters.TEXT, callback=answer_question)],
+        FINISHED_QUIZ: [show_quizzes_handler, CallbackQueryHandler(
+            callback=restart_quiz, pattern=f'^{RESTART_QUIZ}$')]
     },
-    fallbacks=[],
+    fallbacks=[CallbackQueryHandler(
+        callback=return_to_menu, pattern=f'^{END}$')],
     map_to_parent={
-        ConversationHandler.END: START_STATE
+        END: START
     }
 )
