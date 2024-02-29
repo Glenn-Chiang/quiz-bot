@@ -3,8 +3,14 @@ A telegram bot that allows users to create and attempt quizzes on any subject.
 This bot acts as a user interface for my quiz-api.
 
 # Getting started
-## Obtain a bot token
-Follow [this guide](#https://core.telegram.org/bots/features#creating-a-new-bot) to obtain a bot token from telegram.
+
+## Running the API server
+As this telegram bot merely acts as a user interface, you will first need to run the quiz-api server to read and write quizzes to the database.  
+Instructions can be found at [my quiz-api repository](https://github.com/Glenn-Chiang/quiz-api).
+
+## Obtaining a bot token
+Follow [this guide](https://core.telegram.org/bots/features#creating-a-new-bot) to obtain a bot token from telegram.
+
 ## Installation and setup
 1. Clone the repo and navigate to its directory.
 ```
@@ -19,7 +25,7 @@ source venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
-4. Create a `.env` file and set the `BOT_TOKEN` environment variable to your bot token obtained [earlier](#Obtain a bot token)
+4. Create a `.env` file and set the `BOT_TOKEN` environment variable to your bot token obtained [earlier](#obtaining-a-bot-token)
 ```
 BOT_TOKEN='your_token_here'
 ```
