@@ -9,6 +9,10 @@ from start_menu import return_to_menu_handler
 # state = START_STATE
 # When the user clicks the 'Select a Quiz' button,
 # show the list of quizzes for the user to select from
+
+PREV_PAGE, NEXT_PAGE = 'prev', 'next'
+
+
 async def show_quizzes(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text('Fetching quizzes...')
@@ -16,10 +20,37 @@ async def show_quizzes(update: Update, context: CallbackContext):
     if error:
         await update.message.reply_text(f'Error fetching quizzes: {error}')
         return
-    # TODO: Add pagination to allow users to browse many quizzes
-    shown_quizzes = quizzes[:10]
+
+    # Show limited number of quizzes at a time
+    quiz_paginator = QuizPaginator(quizzes=quizzes)
+    context.chat_data['quizzes'] = quiz_paginator
+    shown_quizzes = quiz_paginator.shown_quizzes()
+
     keyboard = [[InlineKeyboardButton(f"#{quiz_data['id']}: {quiz_data['subject'].title()}", callback_data=str(quiz_data['id']))]
-                for quiz_data in shown_quizzes] + [[InlineKeyboardButton('Back to menu', callback_data=END)]]
+                for quiz_data in shown_quizzes] + [[InlineKeyboardButton('< prev', callback_data=PREV_PAGE), InlineKeyboardButton('next >', callback_data=NEXT_PAGE)],
+                                                   [InlineKeyboardButton('Back to menu', callback_data=END)]]
+
+    await update.callback_query.edit_message_text(text='Select a quiz from below', reply_markup=InlineKeyboardMarkup(keyboard))
+    return SELECTING_QUIZ
+
+
+# Go to previous or next page of quizzes shown
+async def change_page(update: Update, context: CallbackContext):
+    await update.callback_query.answer()
+    page_option = update.callback_query.data
+
+    quiz_paginator: QuizPaginator = context.chat_data['quizzes']
+    
+    if page_option == PREV_PAGE:
+        quiz_paginator.prev_page()
+    elif page_option == NEXT_PAGE:
+        quiz_paginator.next_page()
+
+    shown_quizzes = quiz_paginator.shown_quizzes()
+
+    keyboard = [[InlineKeyboardButton(f"#{quiz_data['id']}: {quiz_data['subject'].title()}", callback_data=str(quiz_data['id']))]
+                for quiz_data in shown_quizzes] + [[InlineKeyboardButton('< prev', callback_data=PREV_PAGE), InlineKeyboardButton('next >', callback_data=NEXT_PAGE)],
+                                                   [InlineKeyboardButton('Back to menu', callback_data=END)]]
 
     await update.callback_query.edit_message_text(text='Select a quiz from below', reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_QUIZ
@@ -111,6 +142,25 @@ def get_quiz(context: CallbackContext):
     return quiz
 
 
+class QuizPaginator():
+    max_per_page = 10
+
+    def __init__(self, quizzes: List) -> None:
+        self.quizzes = quizzes
+        self.start_index = 0  # Index of first quiz shown in current page
+
+    def shown_quizzes(self):
+        return self.quizzes[self.start_index: self.start_index + self.max_per_page]
+
+    def next_page(self):
+        if (self.start_index + self.max_per_page <= len(self.quizzes)):
+            self.start_index += self.max_per_page
+
+    def prev_page(self):
+        if (self.start_index > 0):
+            self.start_index -= self.max_per_page
+
+
 class Quiz():
     def __init__(self, quiz_id: str, questions: List[dict]) -> None:
         self.quiz_id = quiz_id
@@ -148,7 +198,8 @@ show_quizzes_handler = CallbackQueryHandler(
 quiz_handler = ConversationHandler(
     entry_points=[show_quizzes_handler],
     states={
-        SELECTING_QUIZ: [CallbackQueryHandler(callback=select_quiz, pattern=f'^(?!{END}).*$')],
+        SELECTING_QUIZ: [CallbackQueryHandler(callback=change_page, pattern=f'^({PREV_PAGE}|{NEXT_PAGE})$'),
+                         CallbackQueryHandler(callback=select_quiz, pattern=r'^\d+$')],
         TAKING_QUIZ: [MessageHandler(filters=filters.TEXT, callback=answer_question)],
         FINISHED_QUIZ: [show_quizzes_handler, CallbackQueryHandler(
             callback=restart_quiz, pattern=f'^{RESTART_QUIZ}$')]
