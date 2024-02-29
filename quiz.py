@@ -9,8 +9,6 @@ from start_menu import return_to_menu_handler
 # state = START_STATE
 # When the user clicks the 'Select a Quiz' button,
 # show the list of quizzes for the user to select from
-
-
 async def show_quizzes(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text('Fetching quizzes...')
@@ -18,7 +16,7 @@ async def show_quizzes(update: Update, context: CallbackContext):
     if error:
         await update.message.reply_text(f'Error fetching quizzes: {error}')
         return
-
+    # TODO: Add pagination to allow users to browse many quizzes
     shown_quizzes = quizzes[:10]
     keyboard = [[InlineKeyboardButton(f"#{quiz_data['id']}: {quiz_data['subject'].title()}", callback_data=str(quiz_data['id']))]
                 for quiz_data in shown_quizzes] + [[InlineKeyboardButton('Back to menu', callback_data=END)]]

@@ -27,3 +27,17 @@ def get_quiz_questions(quiz_id: str):
         return response(res.json())
     except RequestException as error:
         return response(None, error_message=error)
+
+
+def generate_quiz(subject: str, question_count: int):
+    try:
+        res = requests.post(f'{API_URL}/quizzes', json={
+            'subject': subject,
+            'question_count': question_count,
+            'choice_count': 4
+        })
+        res.raise_for_status()
+        return response(res.json())
+    
+    except RequestException as error:
+        return response(None, error_message=error)

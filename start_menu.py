@@ -1,14 +1,14 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler
-from conversation_states import START, TAKE_QUIZ, CREATE_QUIZ, END
+from conversation_states import START, SHOW_QUIZZES, GENERATE_QUIZ, END
 
 
 async def start(update: Update, context: CallbackContext):
     intro_message = "Hi, I am Quiz Bot, your quizzical computerized companion."
     message = 'What would you like to do?'
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton('Take a quiz', callback_data=TAKE_QUIZ)],
-        [InlineKeyboardButton('Create a quiz', callback_data=CREATE_QUIZ)],
+        [InlineKeyboardButton('Take a quiz', callback_data=SHOW_QUIZZES)],
+        [InlineKeyboardButton('Generate a quiz', callback_data=GENERATE_QUIZ)],
     ])
 
     # When this callback is called by entering the /start command,
@@ -28,15 +28,15 @@ async def return_to_menu(update: Update, context: CallbackContext):
     await start(update, context)
     return END
 
-return_to_menu_handler = CallbackQueryHandler(
-    callback=return_to_menu, pattern=f'^{END}$')
+return_to_menu_handler = CallbackQueryHandler(callback=return_to_menu, pattern=f'^{END}$')
 
 from quiz import quiz_handler
+from quiz_generation import quiz_generation_handler
 
 start_menu_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],
     states={
-        START: [quiz_handler],
+        START: [quiz_handler, quiz_generation_handler],
     },
     fallbacks=[]
 )
