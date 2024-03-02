@@ -19,7 +19,7 @@ async def show_quizzes(update: Update, context: CallbackContext):
     await update.callback_query.edit_message_text('Fetching quizzes...')
     
     try:
-        quizzes, error = get_quizzes()
+        quizzes = get_quizzes()
     except RequestException as error:
         await update.message.reply_text(f'Error fetching quizzes: {error}')
         return
@@ -67,7 +67,7 @@ async def select_quiz(update: Update, context: CallbackContext):
     quiz_id = update.callback_query.data
 
     try:
-        quiz_questions, error = get_quiz_questions(quiz_id=quiz_id)
+        quiz_questions = get_quiz_questions(quiz_id=quiz_id)
     except RequestException as error:
         await update.message.reply_text(f'Error fetching quiz questions: {error}')
         return

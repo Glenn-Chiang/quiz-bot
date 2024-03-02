@@ -32,25 +32,22 @@ def generate_quiz(subject: str, question_count: int):
             })
             res.raise_for_status()
             return res.json()
-        
+
         except RequestException:
             tries += 1
             if tries == max_tries:
                 raise
-  
 
-def register_user(user_id: int, username: str):
-    res = requests.post(f'{API_URL}/users', json={
-        'id': user_id,
-        'username': username
-    })
+
+def register_user(username: str):
+    res = requests.post(f'{API_URL}/users', json={'username': username})
     res.raise_for_status()
     return res.json()
 
 
-def get_user(user_id: int):
+def get_user(username: str):
     try:
-        res = requests.get(f'{API_URL}/users/{user_id}')
+        res = requests.get(f'{API_URL}/users', params={'username': username})
         res.raise_for_status()
         return res.json()
     except requests.exceptions.HTTPError as error:
