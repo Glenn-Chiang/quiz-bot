@@ -46,3 +46,13 @@ def register_user(user_id: int, username: str):
     })
     res.raise_for_status()
     return res.json()
+
+
+def get_user(user_id: int):
+    try:
+        res = requests.get(f'{API_URL}/users/{user_id}')
+        res.raise_for_status()
+        return res.json()
+    except requests.exceptions.HTTPError as error:
+        if error.response.status_code == 404:
+            return None
