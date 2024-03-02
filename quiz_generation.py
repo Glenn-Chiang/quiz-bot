@@ -3,9 +3,11 @@ from telegram.ext import CallbackContext, ConversationHandler, CallbackQueryHand
 from conversation_states import GENERATE_QUIZ, SELECTING_SUBJECT, SELECTING_QUESTION_COUNT, FINISHED_GENERATING, START, END
 from start_menu import return_to_menu_handler
 from services import generate_quiz
-
+from requests.exceptions import RequestException
 
 # Triggered when 'Generate a quiz' is clicked
+
+
 async def start(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     keyboard = [[InlineKeyboardButton('Cancel', callback_data=END)]]
@@ -38,23 +40,17 @@ async def select_question_count(update: Update, context: CallbackContext):
     question_count = int(update.callback_query.data)
     subject: str = context.chat_data['quiz_subject']
 
-    await update.callback_query.edit_message_text('Generating quiz. This may take a while...')
+    await update.callback_query.edit_message_text('Generating quiz. This may take a while...', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=END)]]))
 
-    while True:
-        quiz, error = generate_quiz(
-            subject=subject, question_count=question_count)
-        # Retry generating quiz until successful, or until user cancels
-        if error:
-            await update.effective_message.reply_text(f'Error generating quiz. Retrying...',
-                                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Cancel', callback_data=END)]]))
-        else:
-            break
+    try:
+        quiz = generate_quiz(subject=subject, question_count=question_count)
+    except RequestException as error:
+        await update.effective_message.reply_text(f'Error generating quiz: {error}')
 
     await update.callback_query.edit_message_text(f"Quiz generated! #{quiz['id']}: {quiz['subject']}")
 
     keyboard = [
-        [InlineKeyboardButton('Generate another quiz',
-                              callback_data=GENERATE_QUIZ)],
+        [InlineKeyboardButton('Generate another quiz', callback_data=GENERATE_QUIZ)],
         [InlineKeyboardButton('Back to menu', callback_data=END)]
     ]
 
