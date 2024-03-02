@@ -15,7 +15,7 @@ def get_quizzes():
     try:
         res = requests.get(f'{API_URL}/quizzes')
         res.raise_for_status()
-        return response(res.json())
+        return response(res.json()['items'])
     except RequestException as error:
         return response(None, error_message=error)
 
@@ -24,7 +24,7 @@ def get_quiz_questions(quiz_id: str):
     try:
         res = requests.get(f'{API_URL}/quizzes/{quiz_id}/questions')
         res.raise_for_status()
-        return response(res.json())
+        return response(res.json()['items'])
     except RequestException as error:
         return response(None, error_message=error)
 
@@ -39,5 +39,17 @@ def generate_quiz(subject: str, question_count: int):
         res.raise_for_status()
         return response(res.json())
     
+    except RequestException as error:
+        return response(None, error_message=error)
+    
+
+def register_user(user_id: int, username: str):
+    try:
+        res = requests.post(f'{API_URL}/users', json={
+            'id': user_id,
+            'username': username
+        })
+        res.raise_for_status()
+        return response(res.json())
     except RequestException as error:
         return response(None, error_message=error)

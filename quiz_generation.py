@@ -4,9 +4,8 @@ from conversation_states import GENERATE_QUIZ, SELECTING_SUBJECT, SELECTING_QUES
 from start_menu import return_to_menu_handler
 from services import generate_quiz
 
+
 # Triggered when 'Generate a quiz' is clicked
-
-
 async def start(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     keyboard = [[InlineKeyboardButton('Cancel', callback_data=END)]]
