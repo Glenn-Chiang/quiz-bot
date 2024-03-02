@@ -45,7 +45,7 @@ def register_user(username: str):
     return res.json()
 
 
-def get_user(username: str):
+def get_user_by_username(username: str):
     try:
         res = requests.get(f'{API_URL}/users', params={'username': username})
         res.raise_for_status()
@@ -53,3 +53,7 @@ def get_user(username: str):
     except requests.exceptions.HTTPError as error:
         if error.response.status_code == 404:
             return None
+
+
+def get_user_attempts(user_id: int):
+    ...

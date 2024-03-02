@@ -2,7 +2,7 @@ from requests.exceptions import RequestException
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler
 from conversation_states import START, SHOW_QUIZZES, GENERATE_QUIZ, VIEW_HISTORY, END
-from services import get_user, register_user
+from services import get_user_by_username, register_user
 
 # Only run this callback when user enters /start command
 # This callback should not be run when 'Back to menu' button is clicked
@@ -12,7 +12,8 @@ async def start(update: Update, context: CallbackContext):
 
     pending_message = await update.message.reply_text("Loading your profile...")
     # Check if user is already registered. If not, register the user.
-    user = get_user(username=username)
+    user = get_user_by_username(username=username)
+
     if not user:
         try:
             register_user( username=username)
@@ -20,6 +21,8 @@ async def start(update: Update, context: CallbackContext):
         except RequestException as error:
             await pending_message.edit_text(f"Sorry, there was an error registering your profile: {error}")
 
+    # Save user_id in memory
+    context.user_data['user_id'] = user['id']
     return await show_start_menu(update, context)    
 
 
@@ -31,7 +34,10 @@ async def show_start_menu(update: Update, context: CallbackContext):
         [InlineKeyboardButton('View your history', callback_data=VIEW_HISTORY)]
     ])
 
-    await update.effective_message.reply_text(text=message, reply_markup=keyboard)
+    if update.callback_query:
+        await update.callback_query.edit_message_text(text=message, reply_markup=keyboard)
+    else:
+        await update.effective_message.reply_text(text=message, reply_markup=keyboard)
     return START
 
 
