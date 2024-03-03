@@ -91,17 +91,18 @@ async def select_quiz(update: Update, context: CallbackContext):
 async def answer_question(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     # id of choice chosen by user
-    choice_id = update.callback_query.data
+    choice_id = int(update.callback_query.data)
     quiz = get_quiz(context)
-    correct_choice = quiz.current_correct_choice()
+    correct_choice = quiz.check_choice()
 
-    if int(choice_id) == int(correct_choice['id']):
+    if quiz.check_choice(question_id=int(quiz.current_question()['id']), choice_id=choice_id):
         quiz.add_score()
         await update.effective_message.reply_text(text='Correct!')
     else:
         await update.effective_message.reply_text(text=f"Incorrect. Correct answer: {correct_choice['text']}")
 
-    quiz.save_choice(question_id=quiz.current_question()['id'], choice_id=choice_id)
+    quiz.save_choice(question_id=quiz.current_question()
+                     ['id'], choice_id=choice_id)
 
     # When the user finishes the quiz, give them options to:
     # Retry the same quiz
@@ -181,10 +182,13 @@ class Quiz():
     def current_question(self) -> dict:
         return self.questions[self.current_question_index]
 
-    def current_correct_choice(self) -> dict:
-        choices = self.current_question()['choices']
-        correct_choice = [choice for choice in choices if choice['correct']][0]
-        return correct_choice
+    # Check if given choice_id refers to a correct choice for given question_id
+    def check_choice(self, question_id: int, choice_id: int) -> bool:
+        question = next(
+            question for question in self.questions if question['id'] == question_id)
+        chosen_choice = next(
+            choice for choice in question['choices'] if choice['id'] == choice_id)
+        return chosen_choice['correct']
 
     def advance_to_next_question(self) -> bool:
         if (self.current_question_index >= len(self.questions) - 1):
