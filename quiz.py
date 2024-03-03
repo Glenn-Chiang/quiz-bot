@@ -6,6 +6,7 @@ from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, C
 from services import get_quizzes, get_quiz_questions, get_user_id, save_attempt
 from conversation_states import SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ, END, START, SHOW_QUIZZES, RESTART_QUIZ
 from start_menu import return_to_menu_handler
+from emojis import CHECK_MARK, CROSS_MARK
 
 # state = START_STATE
 # When the user clicks the 'Select a Quiz' button,
@@ -98,9 +99,9 @@ async def answer_question(update: Update, context: CallbackContext):
 
     if quiz.check_choice(question_id=question_id, choice_id=choice_id):
         quiz.add_score()
-        await update.effective_message.reply_text(text='Correct!')
+        await update.effective_message.reply_text(text=f'{CHECK_MARK} Correct!')
     else:
-        await update.effective_message.reply_text(text=f"Incorrect. Correct answer(s): {(',').join(choice['text'] for choice in correct_choices)}")
+        await update.effective_message.reply_text(text=f"{CROSS_MARK} Incorrect\n Correct answer(s): {(',').join(choice['text'] for choice in correct_choices)}")
 
     quiz.save_choice(question_id=quiz.current_question()
                      ['id'], choice_id=choice_id)
