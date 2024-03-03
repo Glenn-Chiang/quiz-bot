@@ -22,7 +22,7 @@ async def show_quizzes(update: Update, context: CallbackContext):
         quizzes = get_quizzes()
     except RequestException as error:
         await update.message.reply_text(f'Error fetching quizzes: {error}')
-        return
+        return END
 
     # Show limited number of quizzes at a time
     quiz_paginator = QuizPaginator(quizzes=quizzes)
