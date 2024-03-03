@@ -1,3 +1,4 @@
+from typing import List
 from requests.exceptions import HTTPError, RequestException
 import requests
 import os
@@ -6,6 +7,7 @@ load_dotenv()
 
 API_URL = os.getenv('BASE_URL') or 'http://localhost:5000'
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
 
 def get_quizzes():
     res = requests.get(f'{API_URL}/quizzes')
@@ -56,7 +58,21 @@ def get_user_by_username(username: str):
 
 
 def get_user_attempts(user_id: int):
-    res = requests.get(f'{API_URL}/users/{user_id}/attempts', 
+    res = requests.get(f'{API_URL}/users/{user_id}/attempts',
                        headers={'Authorization': f'BOT_TOKEN {BOT_TOKEN}'})
     res.raise_for_status()
     return res.json()['items']
+
+
+# Get list of questions with user's choice for the given quiz attempt
+def get_attempt_questions(attempt_id: int):
+    res = requests.get(f'{API_URL}/attempts/{attempt_id}/questions')
+    res.raise_for_status()
+    return res.json()
+
+
+def save_attempt(quiz_id: int, user_id: int, questions: List[dict[str, int]]):
+    res = requests.post(f'{API_URL}/quizzes/{quiz_id}/attempts',
+                        params={'user_id': user_id}, json={'questions': questions})
+    res.raise_for_status()
+    return res.json()
