@@ -93,13 +93,14 @@ async def answer_question(update: Update, context: CallbackContext):
     # id of choice chosen by user
     choice_id = int(update.callback_query.data)
     quiz = get_quiz(context)
-    correct_choice = quiz.check_choice()
+    question_id = int(quiz.current_question()['id'])
+    correct_choices = quiz.correct_choices(question_id=question_id)
 
-    if quiz.check_choice(question_id=int(quiz.current_question()['id']), choice_id=choice_id):
+    if quiz.check_choice(question_id=question_id, choice_id=choice_id):
         quiz.add_score()
         await update.effective_message.reply_text(text='Correct!')
     else:
-        await update.effective_message.reply_text(text=f"Incorrect. Correct answer: {correct_choice['text']}")
+        await update.effective_message.reply_text(text=f"Incorrect. Correct answer(s): {(',').join(choice['text'] for choice in correct_choices)}")
 
     quiz.save_choice(question_id=quiz.current_question()
                      ['id'], choice_id=choice_id)
@@ -182,13 +183,20 @@ class Quiz():
     def current_question(self) -> dict:
         return self.questions[self.current_question_index]
 
+    def get_question(self, question_id: int) -> dict:
+        return next(question for question in self.questions if question['id'] == question_id)
+
     # Check if given choice_id refers to a correct choice for given question_id
     def check_choice(self, question_id: int, choice_id: int) -> bool:
-        question = next(
-            question for question in self.questions if question['id'] == question_id)
+        question = self.get_question(question_id)
         chosen_choice = next(
             choice for choice in question['choices'] if choice['id'] == choice_id)
         return chosen_choice['correct']
+
+    # Get list of correct choices for given question_id
+    def correct_choices(self, question_id: int) -> List:
+        question = self.get_question(question_id)
+        return [choice for choice in question['choices'] if choice['correct']]
 
     def advance_to_next_question(self) -> bool:
         if (self.current_question_index >= len(self.questions) - 1):
