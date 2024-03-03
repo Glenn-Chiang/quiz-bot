@@ -1,3 +1,5 @@
+from telegram import Update
+from telegram.ext import CallbackContext
 from typing import List
 from requests.exceptions import HTTPError, RequestException
 import requests
@@ -7,6 +9,15 @@ load_dotenv()
 
 API_URL = os.getenv('BASE_URL') or 'http://localhost:5000'
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+
+def get_user_id(update: Update, context: CallbackContext) -> int | None:
+    # Get user_id from bot memory. If not saved in memory, then fetch from API using username as identifier.
+    user_id: int = context.user_data['user_id']
+    if not user_id:
+        user = get_user_by_username(update.effective_user.username)
+        user_id = user['id'] if user else None
+    return user_id
 
 
 def get_quizzes():
@@ -71,8 +82,8 @@ def get_attempt_questions(attempt_id: int):
     return res.json()
 
 
-def save_attempt(quiz_id: int, user_id: int, questions: List[dict[str, int]]):
+def save_attempt(quiz_id: int, user_id: int, question_choices: List[dict[str, int]]):
     res = requests.post(f'{API_URL}/quizzes/{quiz_id}/attempts',
-                        params={'user_id': user_id}, json={'questions': questions})
+                        params={'user_id': user_id}, json={'questions': question_choices})
     res.raise_for_status()
     return res.json()
