@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 from typing import List
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import RequestException
 import requests
 import os
 from dotenv import load_dotenv

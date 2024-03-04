@@ -3,10 +3,10 @@ from requests.exceptions import RequestException
 from typing import List
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
-from services import get_quizzes, get_quiz_questions, get_user_id, save_attempt
-from conversation_states import SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ, END, START, SHOW_QUIZZES, RESTART_QUIZ
-from start_menu import return_to_menu_handler
-from emojis import CHECK_MARK, CROSS_MARK
+from app.services import get_quizzes, get_quiz_questions, get_user_id, save_attempt
+from app.conversation_states import SELECTING_QUIZ, TAKING_QUIZ, FINISHED_QUIZ, END, START, SHOW_QUIZZES, RESTART_QUIZ
+from app.conversation_handlers.start_menu import return_to_menu_handler
+from app.emojis import CHECK_MARK, CROSS_MARK
 
 # state = START_STATE
 # When the user clicks the 'Select a Quiz' button,

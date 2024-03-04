@@ -1,8 +1,8 @@
 from requests.exceptions import RequestException
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, CommandHandler, ConversationHandler, CallbackQueryHandler
-from conversation_states import START, SHOW_QUIZZES, GENERATE_QUIZ, VIEW_HISTORY, END
-from services import get_user_by_username, register_user
+from app.conversation_states import START, SHOW_QUIZZES, GENERATE_QUIZ, VIEW_HISTORY, END
+from app.services import get_user_by_username, register_user
 
 # Only run this callback when user enters /start command
 # This callback should not be run when 'Back to menu' button is clicked
@@ -49,9 +49,9 @@ async def return_to_menu(update: Update, context: CallbackContext):
 
 return_to_menu_handler = CallbackQueryHandler(callback=return_to_menu, pattern=f'^{END}$')
 
-from quiz import quiz_handler
-from quiz_generation import quiz_generation_handler
-from history import history_handler
+from app.conversation_handlers.quiz import quiz_handler
+from app.conversation_handlers.quiz_generation import quiz_generation_handler
+from app.conversation_handlers.history import history_handler
 
 start_menu_handler = ConversationHandler(
     entry_points=[CommandHandler('start', start)],

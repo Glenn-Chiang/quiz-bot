@@ -2,7 +2,7 @@ import os
 from telegram.ext import Application
 from dotenv import load_dotenv
 load_dotenv()
-from start_menu import start_menu_handler
+from app.conversation_handlers.start_menu import start_menu_handler
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 

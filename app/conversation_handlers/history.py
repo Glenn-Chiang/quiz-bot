@@ -1,10 +1,10 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CallbackQueryHandler, ConversationHandler
-from conversation_states import VIEW_HISTORY, END, START, SELECTING_ATTEMPT, VIEWING_ATTEMPT
-from services import get_user_id, get_user_attempts, get_attempt_questions
+from app.conversation_states import VIEW_HISTORY, END, START, SELECTING_ATTEMPT, VIEWING_ATTEMPT
+from app.emojis import CHECK_MARK, CROSS_MARK
+from app.services import get_user_id, get_user_attempts, get_attempt_questions
 from requests.exceptions import RequestException
-from start_menu import return_to_menu_handler
-from emojis import CHECK_MARK, CROSS_MARK
+from app.conversation_handlers.start_menu import return_to_menu_handler
 
 # Show list of past quiz attempts
 

@@ -1,8 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
-from conversation_states import GENERATE_QUIZ, SELECTING_SUBJECT, SELECTING_QUESTION_COUNT, FINISHED_GENERATING, START, END
-from start_menu import return_to_menu_handler
-from services import generate_quiz
+from app.conversation_states import GENERATE_QUIZ, SELECTING_SUBJECT, SELECTING_QUESTION_COUNT, FINISHED_GENERATING, START, END
+from app.conversation_handlers.start_menu import return_to_menu_handler
+from app.services import generate_quiz
 from requests.exceptions import RequestException
 
 # Triggered when 'Generate a quiz' is clicked
@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 async def start(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     keyboard = [[InlineKeyboardButton('Cancel', callback_data=END)]]
-    await update.effective_message.reply_text('Enter a subject for the quiz', reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.callback_query.edit_message_text('Enter a subject for the quiz', reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_SUBJECT
 
 
