@@ -6,9 +6,8 @@ from app.services import get_user_id, get_user_attempts, get_attempt_questions
 from requests.exceptions import RequestException
 from app.conversation_handlers.start_menu import return_to_menu_handler
 
+
 # Show list of past quiz attempts
-
-
 async def start(update: Update, context: CallbackContext):
     await update.callback_query.answer()
     await update.callback_query.edit_message_text('Loading your history...')
@@ -23,7 +22,7 @@ async def start(update: Update, context: CallbackContext):
     keyboard = [[InlineKeyboardButton(
         f"#{attempt['quiz_id']}: {attempt['quiz']['subject'].title()} ({attempt['correct_count']}/{attempt['quiz']['question_count']})",
         callback_data=attempt['id'])]
-        for attempt in attempts]
+        for attempt in attempts] + [[InlineKeyboardButton('Back to menu', callback_data=END)]]
 
     await update.callback_query.edit_message_text('Your quiz attempts:', reply_markup=InlineKeyboardMarkup(keyboard))
     return SELECTING_ATTEMPT
